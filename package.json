@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Gaslite gas optimization GitHub Action",
     "scripts": {
-    "build": "tsc && ncc build src/index.ts -o dist",
+    "build": "tsc && ncc build src/index.ts -o dist --license licenses.txt",
     "dev": "ts-node src/index.ts"
   },
   "devDependencies": {
