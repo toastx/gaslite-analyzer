@@ -1,6 +1,6 @@
-import { App, createNodeMiddleware } from '@octokit/app';
+import { App } from '@octokit/app';
 import { Octokit } from '@octokit/rest';
-import { createServer } from 'node:http';
+import { createServer } from 'http';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -193,6 +193,26 @@ app.webhooks.onError(error => {
 
 const port = parseInt(process.env.PORT || '3000');
 
-createServer(createNodeMiddleware(app)).listen(port, () => {
+createServer(async (req, res) => {
+  if (req.method === 'POST' && req.url === '/api/github/webhooks') {
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    try {
+      await app.webhooks.verifyAndReceive({
+        id: req.headers['x-github-delivery'] as string,
+        name: req.headers['x-github-event'] as any,
+        signature: req.headers['x-hub-signature-256'] as string,
+        payload: body,
+      });
+      res.writeHead(200).end('OK');
+    } catch (err) {
+      res.writeHead(400).end(String(err));
+    }
+  } else if (req.url === '/health') {
+    res.writeHead(200).end('OK');
+  } else {
+    res.writeHead(404).end();
+  }
+}).listen(port, () => {
   console.log(`[gaslite] Webhook server running on port ${port}`);
 });
