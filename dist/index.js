@@ -1,4 +1,3 @@
-"use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -27,11 +26,11 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 
 // node_modules/content-type/dist/index.js
 var require_dist = __commonJS({
-  "node_modules/content-type/dist/index.js"(exports2) {
+  "node_modules/content-type/dist/index.js"(exports) {
     "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.format = format;
-    exports2.parse = parse15;
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.format = format;
+    exports.parse = parse15;
     var TEXT_REGEXP = /^[\u0009\u0020-\u007e\u0080-\u00ff]*$/;
     var TOKEN_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
     var QUOTE_REGEXP = /[\\"]/g;
@@ -4650,11 +4649,11 @@ function base64encodeJSON(obj) {
 }
 
 // node_modules/universal-github-app-jwt/lib/crypto-node.js
-var import_node_crypto = require("node:crypto");
-var import_node_crypto2 = require("node:crypto");
+import { subtle } from "node:crypto";
+import { createPrivateKey } from "node:crypto";
 function convertPrivateKey(privateKey) {
   if (!isPkcs1(privateKey)) return privateKey;
-  return (0, import_node_crypto2.createPrivateKey)(privateKey).export({
+  return createPrivateKey(privateKey).export({
     type: "pkcs8",
     format: "pem"
   });
@@ -4679,7 +4678,7 @@ async function getToken({ privateKey, payload }) {
   };
   const header = { alg: "RS256", typ: "JWT" };
   const privateKeyDER = getDERfromPEM(convertedPrivateKey);
-  const importedKey = await import_node_crypto.subtle.importKey(
+  const importedKey = await subtle.importKey(
     "pkcs8",
     privateKeyDER,
     algorithm,
@@ -4688,7 +4687,7 @@ async function getToken({ privateKey, payload }) {
   );
   const encodedMessage = getEncodedMessage(header, payload);
   const encodedMessageArrBuf = string2ArrayBuffer(encodedMessage);
-  const signatureArrBuf = await import_node_crypto.subtle.sign(
+  const signatureArrBuf = await subtle.sign(
     algorithm.name,
     importedKey,
     encodedMessageArrBuf
@@ -6987,9 +6986,9 @@ var OAuthApp = class {
 };
 
 // node_modules/@octokit/webhooks-methods/dist-node/index.js
-var import_node_crypto3 = require("node:crypto");
-var import_node_crypto4 = require("node:crypto");
-var import_node_buffer = require("node:buffer");
+import { createHmac } from "node:crypto";
+import { timingSafeEqual } from "node:crypto";
+import { Buffer as Buffer2 } from "node:buffer";
 var VERSION24 = "6.0.0";
 async function sign(secret, payload) {
   if (!secret || !payload) {
@@ -7001,7 +7000,7 @@ async function sign(secret, payload) {
     throw new TypeError("[@octokit/webhooks-methods] payload must be a string");
   }
   const algorithm = "sha256";
-  return `${algorithm}=${(0, import_node_crypto3.createHmac)(algorithm, secret).update(payload).digest("hex")}`;
+  return `${algorithm}=${createHmac(algorithm, secret).update(payload).digest("hex")}`;
 }
 sign.VERSION = VERSION24;
 async function verify(secret, eventPayload, signature) {
@@ -7015,12 +7014,12 @@ async function verify(secret, eventPayload, signature) {
       "[@octokit/webhooks-methods] eventPayload must be a string"
     );
   }
-  const signatureBuffer = import_node_buffer.Buffer.from(signature);
-  const verificationBuffer = import_node_buffer.Buffer.from(await sign(secret, eventPayload));
+  const signatureBuffer = Buffer2.from(signature);
+  const verificationBuffer = Buffer2.from(await sign(secret, eventPayload));
   if (signatureBuffer.length !== verificationBuffer.length) {
     return false;
   }
-  return (0, import_node_crypto4.timingSafeEqual)(signatureBuffer, verificationBuffer);
+  return timingSafeEqual(signatureBuffer, verificationBuffer);
 }
 verify.VERSION = VERSION24;
 async function verifyWithFallback(secret, payload, signature, additionalSecrets) {
@@ -8251,7 +8250,7 @@ var App = class {
 };
 
 // src/index.ts
-var import_node_http = require("node:http");
+import { createServer } from "node:http";
 var GASLITE_API_URL = "https://gaslite.onrender.com";
 async function callGaslite(contractSource) {
   const response = await fetch(`${GASLITE_API_URL}/api/optimize`, {
@@ -8418,7 +8417,7 @@ app.webhooks.onError((error) => {
   console.error("[gaslite] Webhook error:", String(error));
 });
 var port = parseInt(process.env.PORT || "3000");
-(0, import_node_http.createServer)(createNodeMiddleware3(app)).listen(port, () => {
+createServer(createNodeMiddleware3(app)).listen(port, () => {
   console.log(`[gaslite] Webhook server running on port ${port}`);
 });
 /*! Bundled license information:
