@@ -2,7 +2,7 @@
 
 > Autonomous YUL gas optimization agent for Mantle L2 smart contracts — runs directly in your GitHub PRs.
 
-[![GitHub Marketplace](https://img.shields.io/badge/GitHub-Marketplace-blue?logo=github)](https://github.com/marketplace/actions/gaslite-analyzer)
+[![GitHub App](https://img.shields.io/badge/GitHub-App-blue?logo=github)](https://github.com/apps/gaslite-analyzer)
 [![Mantle L2](https://img.shields.io/badge/Mantle-L2-green)](https://mantle.xyz)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -17,91 +17,13 @@ Every time you open a Pull Request with Solidity changes, Gaslite Analyzer:
 3. **Generates** optimized code with inline assembly
 4. **Posts** a detailed report directly to your PR
 
-No setup beyond adding one workflow file. No local tools required.
+No workflow files. No configuration. Just install and go.
 
 ---
 
-## Quick Start
+## Install
 
-**Step 1** — Add the workflow to your Mantle protocol repo at `.github/workflows/gaslite.yml`:
-
-```yaml
-name: Gaslite Gas Optimization
-
-on:
-  pull_request:
-    paths:
-      - '**.sol'
-
-jobs:
-  gaslite:
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Gaslite Analyzer
-        uses: toastx/gaslite-analyzer@v1
-        with:
-          gaslite-api-url: ${{ secrets.GASLITE_API_URL }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-**Step 2** — Add `GASLITE_API_URL` to your repo secrets (Settings → Secrets → Actions)
-
-**Step 3** — Open a PR with any `.sol` changes and Gaslite comments automatically
-
----
-
-## Inputs
-
-| Input | Required | Default | Description |
-|-------|----------|---------|-------------|
-| `gaslite-api-url` | ✅ | — | URL of your Gaslite backend deployment |
-| `github-token` | ✅ | `${{ github.token }}` | GitHub token for posting PR comments |
-| `gaslite-api-key` | ❌ | `""` | API key for private deployments |
-| `min-gas-savings` | ❌ | `100` | Skip files below this gas threshold |
-| `fail-on-unoptimized` | ❌ | `false` | Block PR merge if optimizations found |
-
-## Outputs
-
-| Output | Description |
-|--------|-------------|
-| `optimized-files` | Number of files with optimization opportunities |
-| `total-files` | Total Solidity files analyzed |
-
----
-
-## Configuration Examples
-
-### Block merges until optimized
-
-Turn Gaslite into a required status check — PRs cannot merge until gas is optimized:
-
-```yaml
-- uses: toastx/gaslite-analyzer@v1
-  with:
-    gaslite-api-url: ${{ secrets.GASLITE_API_URL }}
-    github-token: ${{ secrets.GITHUB_TOKEN }}
-    fail-on-unoptimized: 'true'
-    min-gas-savings: '500'
-```
-
-### Private deployment with API key
-
-```yaml
-- uses: toastx/gaslite-analyzer@v1
-  with:
-    gaslite-api-url: ${{ secrets.GASLITE_API_URL }}
-    gaslite-api-key: ${{ secrets.GASLITE_API_KEY }}
-    github-token: ${{ secrets.GITHUB_TOKEN }}
-```
+[**Install the GitHub App**](https://github.com/apps/gaslite-analyzer) and select the repos you want to enable. That's it.
 
 ---
 
@@ -128,9 +50,9 @@ Gaslite applies Mantle-specific YUL patterns sourced from Solady and Solmate:
 ```
 PR opened with .sol changes
         ↓
-Action detects changed files via git diff
+Gaslite App receives webhook from GitHub
         ↓
-Each file sent to Gaslite /api/optimize
+Changed files fetched via GitHub API
         ↓
 solang AST parser detects contract type (ERC20, ERC721, DeFi...)
         ↓
@@ -156,22 +78,6 @@ Formatted report posted as PR comment
 - Pure interfaces
 
 Comments are **updated in-place** on re-runs — no duplicate comments on each push.
-
----
-
-## Self-hosting the backend
-
-```bash
-git clone https://github.com/toastx/gaslite
-cd gaslite
-
-# Configure environment
-cp .env.example .env
-# Fill in: DEEPSEEK_API_KEY, QDRANT_URL, QDRANT_API_KEY, TURSO_URL, TURSO_TOKEN
-
-# Run
-cargo run --release
-```
 
 ---
 
