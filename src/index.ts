@@ -1,5 +1,4 @@
 import { App } from '@octokit/app';
-import { Octokit } from '@octokit/rest';
 import { createServer } from 'http';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -96,14 +95,11 @@ const app = new App({
   appId: process.env.APP_ID!,
   privateKey: process.env.PRIVATE_KEY!,
   webhooks: { secret: process.env.WEBHOOK_SECRET! },
-  Octokit: Octokit as any,
 });
 
 app.webhooks.on(
   ['pull_request.opened', 'pull_request.synchronize'],
-  async ({ octokit: octokitBase, payload }) => {
-    const octokit = octokitBase as unknown as Octokit;
-
+  async ({ octokit, payload }) => {
     const { pull_request: pr, repository } = payload;
     const owner = repository.owner.login;
     const repo = repository.name;
@@ -113,15 +109,14 @@ app.webhooks.on(
 
     console.log(`[gaslite] PR #${prNumber} in ${owner}/${repo}`);
 
-    const { data: files } = await octokit.rest.pulls.listFiles({
+    const { data: files } = await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}/files', {
       owner,
       repo,
       pull_number: prNumber,
     });
 
-    const solFiles = files.filter(
-      (f: { filename: string; status: string }) =>
-        f.filename.endsWith('.sol') && f.status !== 'removed'
+    const solFiles = (files as Array<{ filename: string; status: string }>).filter(
+      f => f.filename.endsWith('.sol') && f.status !== 'removed'
     );
 
     if (solFiles.length === 0) {
@@ -131,9 +126,9 @@ app.webhooks.on(
 
     const results: FileResult[] = [];
 
-    for (const file of solFiles as Array<{ filename: string }>) {
+    for (const file of solFiles) {
       try {
-        const { data } = await octokit.rest.repos.getContent({
+        const { data } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
           owner,
           repo,
           path: file.filename,
@@ -141,7 +136,7 @@ app.webhooks.on(
         });
 
         if (Array.isArray(data) || !('content' in data)) continue;
-        const content = Buffer.from(data.content as string, 'base64').toString('utf8');
+        const content = Buffer.from((data as { content: string }).content, 'base64').toString('utf8');
 
         if (shouldSkip(file.filename, content)) {
           console.log(`[gaslite] Skipping ${file.filename}`);
@@ -166,7 +161,7 @@ app.webhooks.on(
 
     const body = formatComment(results, repoUrl, sha);
 
-    const { data: comments } = await octokit.rest.issues.listComments({
+    const { data: comments } = await octokit.request('GET /repos/{owner}/{repo}/issues/{issue_number}/comments', {
       owner,
       repo,
       issue_number: prNumber,
@@ -176,10 +171,14 @@ app.webhooks.on(
       .find(c => c.body?.includes('Gaslite Gas Optimization Report'));
 
     if (existing) {
-      await octokit.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+      await octokit.request('PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}', {
+        owner, repo, comment_id: existing.id, body,
+      });
       console.log(`[gaslite] Updated comment on PR #${prNumber}`);
     } else {
-      await octokit.rest.issues.createComment({ owner, repo, issue_number: prNumber, body });
+      await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/comments', {
+        owner, repo, issue_number: prNumber, body,
+      });
       console.log(`[gaslite] Posted comment on PR #${prNumber}`);
     }
   }
