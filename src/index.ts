@@ -96,12 +96,12 @@ const app = new App({
   appId: process.env.APP_ID!,
   privateKey: process.env.PRIVATE_KEY!,
   webhooks: { secret: process.env.WEBHOOK_SECRET! },
+  Octokit: Octokit as any,
 });
 
 app.webhooks.on(
   ['pull_request.opened', 'pull_request.synchronize'],
   async ({ octokit: octokitBase, payload }) => {
-    // Cast to REST-enabled Octokit — @octokit/app installs the REST plugin at runtime
     const octokit = octokitBase as unknown as Octokit;
 
     const { pull_request: pr, repository } = payload;
