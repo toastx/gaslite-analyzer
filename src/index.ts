@@ -19,7 +19,7 @@ interface FileResult {
 
 // ── Gaslite API ───────────────────────────────────────────────────────────────
 
-const GASLITE_API_URL = 'https://gaslite.onrender.com';
+const GASLITE_API_URL = 'https://gaslite.fly.dev';
 
 async function callGaslite(contractSource: string): Promise<OptimizeResponse> {
   const response = await fetch(`${GASLITE_API_URL}/api/optimize`, {
